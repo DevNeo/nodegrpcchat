@@ -81,7 +81,7 @@ function startChat() {
 
       if(user1)
       {    
-        setInterval(sendMessageInIntervalsData,3000);
+        setInterval(sendMessageInIntervalsData,8000);
       }
       else
       {

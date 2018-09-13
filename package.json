@@ -22,7 +22,9 @@
   "dependencies": {
     "@grpc/proto-loader": "^0.3.0",
     "args-parser": "^1.1.0",
+    "dequeue": "^1.0.5",
     "grpc": "^1.15.0",
+    "is-utf8": "^0.2.1",
     "jsonwebtoken": "^8.3.0"
   }
 }

@@ -1,12 +1,17 @@
 let grpc = require("grpc");
 var protoLoader = require("@grpc/proto-loader");
-const jwt = require('jsonwebtoken');
 var fs = require('fs');
-
+var Dequeue = require('dequeue');
+var utils = require("./Utils.js");
+var userObj = require("./User.js");
 const server = new grpc.Server();
-const SERVER_ADDRESS = "0.0.0.0:5001";
+const jwt = require('jsonwebtoken');
 
+const SERVER_ADDRESS = "0.0.0.0:5001";
 var SECRET_KEY = "secretkey";
+var MAX_MSG_LIMIT = 4; //In kbs
+var MIN_TIME_BETWEEN_MSGS = 5; //In secs
+
 var user_list = [];
 
 // Load protobuf
@@ -23,16 +28,26 @@ let proto = grpc.loadPackageDefinition(
 
 let users = [];
 let usersId = [];
+var userMap = new Map()
+//let userDataList = [];
 
 function login(call,callback){
+  	//Check if user blob is present otherwise create a user blob
   console.log("Login with"+ call.request.userId + " " + call.request.password);
-  
   var user = call.request;
-  //Check for user id and password asynchronously.
   if(authenticateUser(call.request.userId,call.request.password) == true)
   {
+
+  	//userObj[call.request.userId].name = call.request.userId;
+  	//userObj[call.request.userId].password = call.request.password;
+  //	userObj[authData.userId].lastmessageTime = utils.getTimePassedInSeconds();
+
     jwt.sign(user,'secretkey',(err,token)=>{
       console.log(token);
+      var person = new userObj.Person(call.request.userId,call.request.password);
+      console.log("User details " + person.name + " " + person.pass);    
+      userMap.set(call.request.userId,person);
+      console.log("User details set on map");
       callback(null,{status:"success",jwtToken:token});
     });
   }
@@ -55,17 +70,58 @@ function authenticateUser(userid,password,){
   return false;
 }
 
-function receiveMessage(call,callback)
-{
-    jwt.verify(call.request.jwtToken,SECRET_KEY,(err,authData)=>{
+
+function sendMessage(call,callback){
+  console.log(" " + call.request.recipientUserId +  "  " + call.request.messagesent + "  " + call.request.jwtToken);
+
+  if(utils.isUtfString(call.request.messagesent) == false) 
+  {
+  	console.log(" Unicode test failure");
+  		 callback(new Error('failed'),null);
+  			return;
+  }
+  else if(utils.getSizeOfStringInKB(call.request.messagesent) > MAX_MSG_LIMIT)
+		{	
+			console.log(" size test failure");
+				 callback(new Error('failed'),null);
+				 return;
+		}
+
+	console.log(" sendMessage Verfied");
+  jwt.verify(call.request.jwtToken,'secretkey',(err,authData)=>{
     if(err)
     {
+      callback(new Error('failed'),null);
     }
     else
     {
-        console.log("recvMessage verified");
-        users.push(call);  
-        usersId.push(authData.userId);   
+    				var personData =	userMap.get(authData.userId);
+    		 	if(personData.dequeue.length	>=3)
+    			 {
+    			 	 value = personData.dequeue.first();
+    				 	var timePassedLastButThirdMessg = utils.getTimePassedInSeconds() - value;	
+    				 	if(timePassedLastButThirdMessg < 5)
+    				 	{
+    				 			callback(new Error('Mssg will not be entertained'),null);
+    				 			return;
+    				 	}
+    				 	else
+    				 	{
+    				 		 personData.dequeue.shift();
+    				 		 personData.dequeue.push(utils.getTimePassedInSeconds());
+    				 	}
+    				 	console.log("dequeue after operation" + personData.dequeue.length);
+
+    			}
+    			else
+    			{
+    				 	console.log("Time inseconds passed"+ utils.getTimePassedInSeconds());
+    						personData.dequeue.push(utils.getTimePassedInSeconds());
+    			}
+
+    				//var msgTime = process.hrtime();
+    				callback(null,{status:"success"});
+    			 notifyChat(authData.userId,call.request.recipientUserId,call.request.messagesent);
     }
   });
 }
@@ -79,23 +135,21 @@ function notifyChat(senderid,recieverId,message) {
          users[i].write({senderUserId:senderid,messageRecv:message})
       }
   }
+
+  
 }
 
-var messageList = {};
-function sendMessage(call,callback){
-  console.log(" " + call.request.recipientUserId +  "  " + call.request.messagesent + "  " + call.request.jwtToken);
-  //
-  jwt.verify(call.request.jwtToken,'secretkey',(err,authData)=>{
+function receiveMessage(call,callback)
+{
+    jwt.verify(call.request.jwtToken,SECRET_KEY,(err,authData)=>{
     if(err)
     {
-      callback(new Error('failed'),null);
     }
     else
     {
-        //messageList.push({})
-        notifyChat(authData.userId,call.request.recipientUserId,call.request.messagesent);
-        console.log(""+ authData.userId);
-        console.log(""+ authData.password);
+        console.log("recvMessage verified");
+        users.push(call);  
+        usersId.push(authData.userId);   
     }
   });
 }
