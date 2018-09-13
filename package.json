@@ -1,0 +1,28 @@
+{
+  "name": "nodechat",
+  "version": "1.0.0",
+  "description": "Node based chat server",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DevNeo/nodegrpcchat.git"
+  },
+  "keywords": [
+    "suraj"
+  ],
+  "author": "suraj",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/DevNeo/nodegrpcchat/issues"
+  },
+  "homepage": "https://github.com/DevNeo/nodegrpcchat#readme",
+  "dependencies": {
+    "@grpc/proto-loader": "^0.3.0",
+    "args-parser": "^1.1.0",
+    "grpc": "^1.15.0",
+    "jsonwebtoken": "^8.3.0"
+  }
+}

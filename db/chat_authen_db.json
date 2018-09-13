@@ -1,0 +1,25 @@
+[{
+    "user": {
+        "uname": "suraj",
+        "pwd": "dev"
+    },
+    "status": "Hey what up!!"
+}, {
+    "user": {
+        "uname": "dev",
+        "pwd": "abcdefgh"
+    },
+    "status": "Old is gold"
+}, {
+    "user": {
+        "uname": "rohan",
+        "pwd": "123456"
+    },
+    "status": "Check the value !!!"
+}, {
+    "user": {
+        "uname": "arnold",
+        "pwd": "dsdsadsa"
+    },
+    "status": "Dawn of the dead"
+}]
