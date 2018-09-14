@@ -109,6 +109,8 @@ function sendMessage(call,callback){
        {
           console.log("Time inseconds passed"+ utils.getTimePassedInSeconds());
           personData.dequeue.push(utils.getTimePassedInSeconds());
+          console.log("Time inseconds passed dequeue"+ utils.getTimePassedInSeconds());
+          
        }
 
         callback(null,{status:"success"});
@@ -119,10 +121,15 @@ function sendMessage(call,callback){
 
 function notifyChat(senderid,recieverId,message) { 
   var recvPresent = false;
+  console.log("Number of users connected : "+ usersId.length);
+  console.log("Number of users connected : "+ recieverId);
   for(var i=0;i<usersId.length;i++)
   {
+   console.log("User "+ usersId[i]);
+  
       if(usersId[i] == recieverId)
       {
+        console.log(recieverId +" sent message");
          recvPresent = true;
          console.log("Data written in stream");
          users[i].write({senderUserId:senderid,messageRecv:message})

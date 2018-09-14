@@ -26,7 +26,7 @@ var username = "";
 var pass = ""
 var token = "";
 var user1 = false;
-
+var friendName = "";
 //Create gRPC client
 let client = new proto.example.Chat(
                                     REMOTE_SERVER,
@@ -63,8 +63,9 @@ function startChat() {
           // process status
           });
 
-          //Send message to the other client.
-          client.sendMessage({recipientUserId: "neo" ,messagesent:"Message to be sent",jwtToken:response.jwtToken},function(err,response){
+
+          rl.on("line", function(text) {
+          client.sendMessage({recipientUserId: friendName ,messagesent:text,jwtToken:token},function(err,response){
             if(err)
             {
               console.log("Send message failed error" + err);
@@ -73,20 +74,35 @@ function startChat() {
                 
                   console.log("Send message " + response.status);
               }
-          });
+          });		
+          	
+    		//client.send({ user: username, text: text }, res => {});
+  			});	
+
+          //Send message to the other client.
+          /*client.sendMessage({recipientUserId: friendName ,messagesent:"Message to be sent",jwtToken:response.jwtToken},function(err,response){
+            if(err)
+            {
+              console.log("Send message failed error" + err);
+            }
+            else{
+                
+                  console.log("Send message " + response.status);
+              }
+          });*/
         
       }
     });
 
 
-      if(user1)
+      /*if(user1)
       {    
         setInterval(sendMessageInIntervalsData,8000);
       }
       else
       {
         
-      }
+      }*/
        
 
 }
@@ -97,7 +113,7 @@ function sendMessageInIntervalsData()
 {
 
 ++x;
-  client.sendMessage({recipientUserId: "rohan" ,messagesent:"Message to be sent"+ x,jwtToken:token},function(err,response){
+  client.sendMessage({recipientUserId: friendName ,messagesent:"Message to be sent"+ x,jwtToken:token},function(err,response){
               if(err)
               {
                 console.log("Send message failed error" + err);
@@ -110,7 +126,26 @@ function sendMessageInIntervalsData()
 
 }
 
-if (args.a) {
+rl.question("What's ur name? ", answer => {
+  username = answer;
+
+  rl.question("What's ur password? ", answer => {
+  pass = answer;
+
+   rl.question("Enter friend name to chat", answer => {
+  friendName = answer;
+	startChat();
+});
+	});
+
+});
+
+
+
+
+
+
+/*if (args.a) {
     // Do something
     user1 = true ;
     username = "suraj";
@@ -122,6 +157,5 @@ else
   username = "rohan";
   pass = "123456";
   console.log("player2");
-}
+}*/
 
-startChat();
