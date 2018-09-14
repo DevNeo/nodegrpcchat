@@ -1,19 +1,21 @@
 let grpc = require("grpc");
 var protoLoader = require("@grpc/proto-loader");
 var fs = require('fs');
-var Dequeue = require('dequeue');
 var utils = require("./Utils.js");
 var offlineStorage = require("./OfflineStorage.js");
 var userObj = require("./User.js"); //This will be stored in redis
 const server = new grpc.Server();
 const jwt = require('jsonwebtoken');
 
+//Configuration setting
 const SERVER_ADDRESS = "0.0.0.0:5001";
 var SECRET_KEY = "secretkey";
 var MAX_MSG_LIMIT = 4; //In kbs
 var MIN_TIME_BETWEEN_MSGS = 5; //In secs
 
-var user_list = [];
+
+
+var user_list_json_db = [];
 
 // Load protobuf
 let proto = grpc.loadPackageDefinition(
@@ -32,7 +34,6 @@ let usersId = [];
 var userMap = new Map()
 
 function login(call,callback){
-   //Check if user blob is present otherwise create a user blob
   console.log("Login with"+ call.request.userId + " " + call.request.password);
   var user = call.request;
   if(authenticateUser(call.request.userId,call.request.password) == true)
@@ -52,8 +53,8 @@ function login(call,callback){
 }
 
 function authenticateUser(userid,password,){
-  for (var i = 0; i < user_list.length; i++) {
-      userDetails = user_list[i];
+  for (var i = 0; i < user_list_json_db.length; i++) {
+      userDetails = user_list_json_db[i];
       if(userid == userDetails.user.uname && password == userDetails.user.pwd)
       {
           return true;
@@ -66,72 +67,58 @@ function authenticateUser(userid,password,){
 function sendMessage(call,callback){
   console.log(" " + call.request.recipientUserId +  "  " + call.request.messagesent + "  " + call.request.jwtToken);
 
-  if(utils.isUtfString(call.request.messagesent) == false) 
-  {
-   console.log(" Unicode test failure");
+  if(utils.isUtfString(call.request.messagesent) == false) {
+     console.log(" Unicode test failure");
      callback(new Error('failed'),null);
-     return;
   }
-  else if(utils.getSizeOfStringInKB(call.request.messagesent) > MAX_MSG_LIMIT)
-  { 
-   console.log(" size test failure");
+  else if(utils.getSizeOfStringInKB(call.request.messagesent) > MAX_MSG_LIMIT){ 
+     console.log(" Size test failure");
      callback(new Error('failed'),null);
-     return;
   }
-
+  else{
   console.log(" sendMessage Verfied");
   jwt.verify(call.request.jwtToken,'secretkey',(err,authData)=>{
-    if(err)
-    {
+    if(err){
       callback(new Error('failed'),null);
     }
-    else
-    {
+    else{
         var personData = userMap.get(authData.userId);
-        if(personData.dequeue.length >=3)
-        {
+        if(personData.dequeue.length >=3){
           value = personData.dequeue.first();
           var timePassedLastButThirdMessg = utils.getTimePassedInSeconds() - value; 
-          if(timePassedLastButThirdMessg < 5)
-          {
+          if(timePassedLastButThirdMessg < 5){
             callback(new Error('Mssg will not be entertained'),null);
-            return;
           }
-          else
-          {
+          else{
             personData.dequeue.shift();
             personData.dequeue.push(utils.getTimePassedInSeconds());
           }
           console.log("dequeue after operation" + personData.dequeue.length);
-
        }
-       else
-       {
+       else{
           console.log("Time inseconds passed"+ utils.getTimePassedInSeconds());
           personData.dequeue.push(utils.getTimePassedInSeconds());
-          console.log("Time inseconds passed dequeue"+ utils.getTimePassedInSeconds());
-          
        }
 
         callback(null,{status:"success"});
         notifyChat(authData.userId,call.request.recipientUserId,call.request.messagesent);
     }
   });
+ }
 }
 
 function notifyChat(senderid,recieverId,message) { 
   var recvPresent = false;
   console.log("Number of users connected : "+ usersId.length);
-  console.log("Number of users connected : "+ recieverId);
+  console.log("SenderId: "+senderid + " ReceiverId: " + recieverId); 
+  
+ //TODO : Use map instead of a list.
   for(var i=0;i<usersId.length;i++)
   {
-   console.log("User "+ usersId[i]);
-  
       if(usersId[i] == recieverId)
       {
-        console.log(recieverId +" sent message");
          recvPresent = true;
-         console.log("Data written in stream");
+         console.log("Data written in "+ recieverId + " stream");
          users[i].write({senderUserId:senderid,messageRecv:message})
       }
   }
@@ -142,7 +129,7 @@ function notifyChat(senderid,recieverId,message) {
   }
   else
   {
-    console.log("Reciever message sent"); 
+   
   }
 }
 
@@ -155,7 +142,7 @@ function receiveMessage(call,callback)
     }
     else
     {
-        console.log("recvMessage verified");
+        console.log("Recieve message verfied for :" + authData.userId);
         users.push(call);  
         usersId.push(authData.userId); 
        
@@ -180,12 +167,13 @@ server.bind(SERVER_ADDRESS, grpc.ServerCredentials.createInsecure());
 var db_path = "db/chat_authen_db.json";
 fs.readFile(db_path, function(err, data) {
     if (err) throw err;
-    user_list = JSON.parse(data);
+    user_list_json_db = JSON.parse(data);
     var userDetails;
     // Check if there is already a feature object for the given point
-    for (var i = 0; i < user_list.length; i++) {
-      userDetails = user_list[i];
-      //console.log(userDetails.user.uname +" "+ userDetails.user.pwd+" " + userDetails.status);
+    console.log("List of users in database ");
+    for (var i = 0; i < user_list_json_db.length; i++) {
+      userDetails = user_list_json_db[i];
+      console.log("User name :" + userDetails.user.uname +" Password : "+ userDetails.user.pwd+"  Status :" + userDetails.status);
     }
 
   });
