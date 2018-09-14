@@ -36,7 +36,6 @@ let client = new proto.example.Chat(
 //Start the stream between server and client
 function startChat() {
       client.login({ userId: username,password : pass},function(err,response){
-     
       if(err)
       { 
           console.log(err +  "Login failed");
@@ -50,7 +49,7 @@ function startChat() {
           let channel = client.receiveMessage({jwtToken:token});
        
           channel.on('data', function(message) {
-               console.log('Found feature called "' + message.senderUserId + message.messageRecv);
+               console.log(message.senderUserId + " : "+ message.messageRecv);
            });
           channel.on('end', function() {
           // The server has finished sending
@@ -63,7 +62,6 @@ function startChat() {
           // process status
           });
 
-
           rl.on("line", function(text) {
           client.sendMessage({recipientUserId: friendName ,messagesent:text,jwtToken:token},function(err,response){
             if(err)
@@ -71,43 +69,30 @@ function startChat() {
               console.log("Send message failed error" + err);
             }
             else{
-                
+                	console.log(username +" : " + text);
                   console.log("Send message " + response.status);
               }
           });		
-          	
-    		//client.send({ user: username, text: text }, res => {});
   			});	
-
-          //Send message to the other client.
-          /*client.sendMessage({recipientUserId: friendName ,messagesent:"Message to be sent",jwtToken:response.jwtToken},function(err,response){
-            if(err)
-            {
-              console.log("Send message failed error" + err);
-            }
-            else{
-                
-                  console.log("Send message " + response.status);
-              }
-          });*/
-        
       }
     });
-
-
-      /*if(user1)
-      {    
-        setInterval(sendMessageInIntervalsData,8000);
-      }
-      else
-      {
-        
-      }*/
-       
-
 }
 
+rl.question("What's ur name? ", answer => {
+	  username = answer;
 
+  	rl.question("What's ur password? ", answer => {
+ 		pass = answer;
+
+   	rl.question("Enter friend name to chat", answer => {
+  	friendName = answer;
+		startChat();
+		});
+	});
+});
+
+
+//Test Cases 1:
 var x = 0;
 function sendMessageInIntervalsData()
 {
@@ -125,37 +110,3 @@ function sendMessageInIntervalsData()
           });
 
 }
-
-rl.question("What's ur name? ", answer => {
-  username = answer;
-
-  rl.question("What's ur password? ", answer => {
-  pass = answer;
-
-   rl.question("Enter friend name to chat", answer => {
-  friendName = answer;
-	startChat();
-});
-	});
-
-});
-
-
-
-
-
-
-/*if (args.a) {
-    // Do something
-    user1 = true ;
-    username = "suraj";
-    pass = "dev";
-    console.log("playe1");
-}
-else
-{
-  username = "rohan";
-  pass = "123456";
-  console.log("player2");
-}*/
-
