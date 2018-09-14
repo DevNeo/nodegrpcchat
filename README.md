@@ -14,7 +14,7 @@ brew install node.
 - Start Server:
 
     ``$ node server``
-    Will provide valid email address and password.
+    Will start the server and provide list of valid username and password.
 
 
 - Start client:
