@@ -6,18 +6,14 @@ brew install node.
 
 # Steps 
 
-$ npm install
+ - Install Modules:
 
-Start Server:
+    ``$ npm install``
 
-$ node server   
-  This will print supported user names and passwords.  
+- Start Server:
 
+    ``$ node server``
 
-Start client:
-  
-$ node client
-  Enter user name : valid user name (suraj)
-  Enter password : valid password (pwd)
-  Enter friend to chat : valid user name of friend
-  
+- Start client:
+
+    ``$ node client``
