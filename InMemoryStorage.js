@@ -3,6 +3,7 @@ clientRedis = redis.createClient();
 clientRedis.on("error", function (err) {
     console.log("Error " + err);
 });
+var async = require('async');
 
 // Store people in chatroom
 //var chatters = [];
@@ -26,7 +27,6 @@ module.exports = {
       		});
       	},
     		two: function(callback) {
-       
         	clientRedis.get('chat_app_messages', function(err, reply) {
     		if (reply) {
         		callback(null, reply);
@@ -38,34 +38,26 @@ module.exports = {
     	//    callback(null, 'xyz\n');
     	}
   	},  function(err, results) {
+
+
+  		console.log(results);
   	callBackResult(null,results);
    		});
 	});
 
 	},
-	storeMessageData: function(chatmessages,callBackResult)
-	{
-		//chat_messages.push({"reciever": recieverId,"sender":senderId,"msg":message});
- 		clientRedis.set('chat_app_messages', JSON.stringify(chat_messages));
+	storeDataWithKey: function(key,data,callBackResult){
+		clientRedis.set(key, JSON.stringify(data));
  		callBackResult("","sucess");
-	},
-	storeChatters: function (chatters,callBackResult)
-	{
-		//chatters.push(userId);
-      	clientRedis.set('chat_users', JSON.stringify(chatters));
-      	callBackResult("","sucesss");
 	},
 	getDataWithKey:function(key,callBackResult){
 		clientRedis.get(key, function(err, reply) {
-      			if (reply) {	
+      			if (reply) 	
         			callBackResult(null,reply);
         			//chatters = JSON.parse(reply);
         			//console.log("get chat users from redis data store");
         			//console.log(chatters);
-      			}
-      		});
+      			});
 	}
-
-
 
 }

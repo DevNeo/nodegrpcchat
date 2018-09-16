@@ -2,6 +2,7 @@ let grpc = require("grpc");
 var protoLoader = require("@grpc/proto-loader");
 var fs = require('fs');
 var utils = require("./Utils.js");
+var inMemoryStorage = require("./InMemoryStorage.js");
 var offlineStorage = require("./OfflineStorage.js");
 var mongo = require('mongodb').MongoClient;
 
@@ -9,57 +10,17 @@ var userObj = require("./User.js"); //This will be stored in redis
 const server = new grpc.Server();
 const jwt = require('jsonwebtoken');
 
-
-/*var DB_NAME = "chatdb"
-var COLLECTION_NAME = "conversation"
-var COLLECTION_NAME_RECIEVER_FIELD = "receiver"
-var MESSAGE_COUNT_OFFLINE_STORAGE = 3;*/
-
 // Store people in chatroom
 var chatters = [];
 // Store messages in chatroom
 var chat_messages = [];
-
-var redis = require("redis"),
-clientRedis = redis.createClient();
-clientRedis.on("error", function (err) {
-    console.log("Error " + err);
-});
- // Redis Client Ready
-clientRedis.once('ready', function() {
-    // Flush Redis DB
-    // client.flushdb();
-    // Initialize Chatters
-    clientRedis.get('chat_users', function(err, reply) {
-    if (reply) {
-        chatters = JSON.parse(reply);
-        console.log("get chat users from redis data store");
-        console.log(chatters);
-      
-      }
-    });
-    
-    // Initialize Messages
-    clientRedis.get('chat_app_messages', function(err, reply) {
-    if (reply) {
-        chat_messages = JSON.parse(reply);
-        console.log("get char messages from redis data store")
-        console.log(chat_messages);
-    }
-    });
-});
-
-
 
 //Configuration setting
 const SERVER_ADDRESS = "0.0.0.0:5001";
 var SECRET_KEY = "secretkey";
 var MAX_MSG_LIMIT = 4; //In kbs
 var MIN_TIME_BETWEEN_MSGS = 5; //In secs
-
 var user_list_json_db = [];
-
-
 
 // Load protobuf
 let proto = grpc.loadPackageDefinition(
@@ -86,10 +47,14 @@ function login(call,callback){
       var person = new userObj.Person(call.request.userId,call.request.password);
       console.log("User details " + person.name + " " + person.pass);    
       userMap.set(call.request.userId,person);
-
       //REDIS
       chatters.push(call.request.userId);
-      clientRedis.set('chat_users', JSON.stringify(chatters));
+      inMemoryStorage.storeDataWithKey("chat_users",chatters,function(err,result){
+      });
+     /*inMemoryStorage.storeChatters(chatters,function(err,result){
+        console.log("Chatters updated in redis");
+      });*/
+      //clientRedis.set('chat_users', JSON.stringify(chatters));
 
       callback(null,{status:"success",jwtToken:token});
     });
@@ -164,7 +129,15 @@ function notifyChat(senderId,recieverId,message) {
 
   //Store in redis.
   chat_messages.push({"reciever": recieverId,"sender":senderId,"msg":message});
-  clientRedis.set('chat_app_messages', JSON.stringify(chat_messages));
+
+  inMemoryStorage.storeDataWithKey('chat_app_messages',chat_messages,function(err,result){
+
+  });
+  /*inMemoryStorage.storeMessageData(chat_messages,function(err,result){
+
+  });*/ 
+
+ // clientRedis.set('chat_app_messages', JSON.stringify(chat_messages));
 
   //TODO : Use map instead of a list.
   for(var i=0;i<usersId.length;i++)
@@ -245,8 +218,20 @@ fs.readFile(db_path, function(error, data) {
   });
 
 
+
 //offlineStorage.createStorage();
 server.start();
+inMemoryStorage.initDataFromStorage(function(err,result){
+  //console.log(result.one);
+  chatters = JSON.parse(result.one);
+  console.log(chatters);
+
+  //console.log(result.two);
+  chat_messages = JSON.parse(result.two);
+  console.log(chat_messages);
+});
+
+
 
 process.on("uncaughtException",function(error){
   console.log("Exception caught"+error);
