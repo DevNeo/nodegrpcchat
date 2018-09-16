@@ -9,10 +9,46 @@ var userObj = require("./User.js"); //This will be stored in redis
 const server = new grpc.Server();
 const jwt = require('jsonwebtoken');
 
+
 /*var DB_NAME = "chatdb"
 var COLLECTION_NAME = "conversation"
 var COLLECTION_NAME_RECIEVER_FIELD = "receiver"
 var MESSAGE_COUNT_OFFLINE_STORAGE = 3;*/
+
+// Store people in chatroom
+var chatters = [];
+// Store messages in chatroom
+var chat_messages = [];
+
+var redis = require("redis"),
+clientRedis = redis.createClient();
+clientRedis.on("error", function (err) {
+    console.log("Error " + err);
+});
+ // Redis Client Ready
+clientRedis.once('ready', function() {
+    // Flush Redis DB
+    // client.flushdb();
+    // Initialize Chatters
+    clientRedis.get('chat_users', function(err, reply) {
+    if (reply) {
+        chatters = JSON.parse(reply);
+        console.log("get chat users from redis data store");
+        console.log(chatters);
+      
+      }
+    });
+    
+    // Initialize Messages
+    clientRedis.get('chat_app_messages', function(err, reply) {
+    if (reply) {
+        chat_messages = JSON.parse(reply);
+        console.log("get char messages from redis data store")
+        console.log(chat_messages);
+    }
+    });
+});
+
 
 
 //Configuration setting
@@ -50,6 +86,11 @@ function login(call,callback){
       var person = new userObj.Person(call.request.userId,call.request.password);
       console.log("User details " + person.name + " " + person.pass);    
       userMap.set(call.request.userId,person);
+
+      //REDIS
+      chatters.push(call.request.userId);
+      clientRedis.set('chat_users', JSON.stringify(chatters));
+
       callback(null,{status:"success",jwtToken:token});
     });
   }
@@ -116,11 +157,15 @@ function sendMessage(call,callback){
  }
 }
 
-function notifyChat(senderid,recieverId,message) { 
+function notifyChat(senderId,recieverId,message) { 
   var recvPresent = false;
   console.log("Number of users connected : "+ usersId.length);
-  console.log("SenderId: "+senderid + " ReceiverId: " + recieverId); 
-  
+  console.log("SenderId: "+senderId + " ReceiverId: " + recieverId);
+
+  //Store in redis.
+  chat_messages.push({"reciever": recieverId,"sender":senderId,"msg":message});
+  clientRedis.set('chat_app_messages', JSON.stringify(chat_messages));
+
   //TODO : Use map instead of a list.
   for(var i=0;i<usersId.length;i++)
   {
@@ -128,12 +173,12 @@ function notifyChat(senderid,recieverId,message) {
       {
          recvPresent = true;
          console.log("Data written in "+ recieverId + " stream");
-         users[i].write({senderUserId:senderid,messageRecv:message})
+         users[i].write({senderUserId:senderId,messageRecv:message})
       }
   }
 
   if(recvPresent == false){
-      offlineStorage.storeMessage(senderid,recieverId,message,function(err, result){
+      offlineStorage.storeMessage(senderId,recieverId,message,function(err, result){
       if(err)
       {
         console.log("Unable to store messages");
@@ -164,7 +209,7 @@ function receiveMessage(call,callback)
         offlineStorage.getLastNMessages(authData.userId,function(err,result){
         if(err)
         {
-            
+
         }
         else
         {  

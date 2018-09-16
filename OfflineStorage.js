@@ -39,7 +39,6 @@ module.exports = {
                     chat.insertOne({reciever:recieverId,sender:senderId,msg:message},function(err,result){
                     	if(err)
                     	{
-
                     		throw err;
                     	}
                     	else
@@ -61,7 +60,7 @@ module.exports = {
                               chat.deleteOne(myquery, function(err, obj) {
 
                                   chat.insertOne({reciever:recieverId,sender:senderId,msg:message},function(err,result){
-                                  	database.close();
+                                  	db.close();
                                   }); 
 
                               });
