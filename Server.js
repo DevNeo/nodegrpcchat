@@ -3,9 +3,17 @@ var protoLoader = require("@grpc/proto-loader");
 var fs = require('fs');
 var utils = require("./Utils.js");
 var offlineStorage = require("./OfflineStorage.js");
+var mongo = require('mongodb').MongoClient;
+
 var userObj = require("./User.js"); //This will be stored in redis
 const server = new grpc.Server();
 const jwt = require('jsonwebtoken');
+
+/*var DB_NAME = "chatdb"
+var COLLECTION_NAME = "conversation"
+var COLLECTION_NAME_RECIEVER_FIELD = "receiver"
+var MESSAGE_COUNT_OFFLINE_STORAGE = 3;*/
+
 
 //Configuration setting
 const SERVER_ADDRESS = "0.0.0.0:5001";
@@ -13,9 +21,9 @@ var SECRET_KEY = "secretkey";
 var MAX_MSG_LIMIT = 4; //In kbs
 var MIN_TIME_BETWEEN_MSGS = 5; //In secs
 
-
-
 var user_list_json_db = [];
+
+
 
 // Load protobuf
 let proto = grpc.loadPackageDefinition(
@@ -52,7 +60,8 @@ function login(call,callback){
 
 }
 
-function authenticateUser(userid,password,){
+function authenticateUser(userid,password){  
+  //TODO : Use mongo db for storing user values.
   for (var i = 0; i < user_list_json_db.length; i++) {
       userDetails = user_list_json_db[i];
       if(userid == userDetails.user.uname && password == userDetails.user.pwd)
@@ -112,7 +121,7 @@ function notifyChat(senderid,recieverId,message) {
   console.log("Number of users connected : "+ usersId.length);
   console.log("SenderId: "+senderid + " ReceiverId: " + recieverId); 
   
- //TODO : Use map instead of a list.
+  //TODO : Use map instead of a list.
   for(var i=0;i<usersId.length;i++)
   {
       if(usersId[i] == recieverId)
@@ -124,14 +133,21 @@ function notifyChat(senderid,recieverId,message) {
   }
 
   if(recvPresent == false){
-    //TODO : Sending last stored message .
-    //offlineStorage.storeMessage(senderid,recieverId,message,Utils.getTimePassedInSeconds());
-  }
-  else
-  {
-   
+      offlineStorage.storeMessage(senderid,recieverId,message,function(err, result){
+      if(err)
+      {
+        console.log("Unable to store messages");
+        throw err;
+      }
+      else
+      {
+        console.log("Message stored in offline storage");
+      }
+    }); 
+    console.log("Reciever is not connected");
   }
 }
+  
 
 function receiveMessage(call,callback)
 {
@@ -144,18 +160,23 @@ function receiveMessage(call,callback)
     {
         console.log("Recieve message verfied for :" + authData.userId);
         users.push(call);  
-        usersId.push(authData.userId); 
-       
-        /*
-        TODO : Getting last 10 messages from db.
-        offlineStorage.findAll();
-        if(result.length > 0)
+        usersId.push(authData.userId);
+        offlineStorage.getLastNMessages(authData.userId,function(err,result){
+        if(err)
         {
-          for(var i=0;i<result.length;i++)
+            
+        }
+        else
+        {  
+          console.log(result);
+          console.log("Size of stored messages to be sent "+ result.length);
+          console.log("Sending messages that are stored to ..."+ authData.userId);
+          for(i=0;i<result.length;i++)
           {
-            notifyChat(result[i].senderid,result[i].recieverId,result[i].message);
+             notifyChat(result[i].sender,result[i].reciever,result[i].msg);
           }
-        }*/
+        }
+        });
     }
   });
 }
@@ -165,8 +186,8 @@ server.bind(SERVER_ADDRESS, grpc.ServerCredentials.createInsecure());
 
 //TODO : Make it as argument.
 var db_path = "db/chat_authen_db.json";
-fs.readFile(db_path, function(err, data) {
-    if (err) throw err;
+fs.readFile(db_path, function(error, data) {
+    if (error) throw err;
     user_list_json_db = JSON.parse(data);
     var userDetails;
     // Check if there is already a feature object for the given point
@@ -179,5 +200,10 @@ fs.readFile(db_path, function(err, data) {
   });
 
 
-offlineStorage.createStorage();
+//offlineStorage.createStorage();
 server.start();
+
+process.on("uncaughtException",function(error){
+  console.log("Exception caught"+error);
+});
+

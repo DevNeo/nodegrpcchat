@@ -78,10 +78,19 @@ function startChat() {
     });
 }
 
-rl.question("What's ur name? ", answer => {
+ /*username = "suraj";
+ pass = "dev";
+ friendName = "rohan";
+
+rl.question("Enter name? ", answer => {
+    startChat();
+
+});*/
+ 
+rl.question("Enter name? ", answer => {
 	  username = answer;
 
-  	rl.question("What's ur password? ", answer => {
+  	rl.question("Enter password? ", answer => {
  		pass = answer;
 
    	rl.question("Enter friend name to chat", answer => {
@@ -89,7 +98,7 @@ rl.question("What's ur name? ", answer => {
 		startChat();
 		});
 	});
-});
+}); 
 
 
 //Test Cases 1:
