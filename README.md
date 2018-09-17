@@ -19,7 +19,7 @@ Docker should be installed.
     Enter valid user name password and friends name
 
 
-=============================
+============================================================================================================================
 
 
 # nodegrpcchat without docker
@@ -47,8 +47,9 @@ Docker should be installed.
 
     ``$ node client``
     Enter valid user name password and friends name
-    
-    
+
+===========================================================================================================================
+
 # Testing : 
 - Start client:
   Test all the apis and functionality by running 2 clients.
