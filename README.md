@@ -1,10 +1,12 @@
 
+# Node js based GRPC chat uses Redis for in-memory storage.MongoDb for offline storage.
+
+
 # nodegrpcchat with docker
 
 # Prerequisites
 Docker should be installed.
 
-# Redis for in-memory storage.MongoDb for offline storage.
 
 # Steps 
  - docker-compose build
