@@ -17,18 +17,16 @@ Docker should be installed.
 
     ``$ node client``
     Enter valid user name password and friends name
-# Done .
-
 
 
 
 # nodegrpcchat without docker
 
 # Prerequisites
-Node js should be installed in machine .
-brew install node.
-Install Redis.Start redis server.
-Install mongodb.Start mongod server.
+- Node js should be installed in machine .
+- brew install node.
+- Install Redis.Start redis server.
+- Install mongodb.Start mongod server.
 
 # Steps 
 
