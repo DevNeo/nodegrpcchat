@@ -1,8 +1,32 @@
-# nodegrpcchat
+
+# nodegrpcchat with docker
+
+# Prerequisites
+Docker should be installed.
+
+# Redis for in-memory storage.MongoDb for offline storage.
+
+# Steps 
+ - docker-compose build
+
+ - docker-compose up 
+
+ - Start client:
+
+    ``$ node client``
+    Enter valid user name password and friends name
+# Done .
+
+
+
+
+# nodegrpcchat without docker
 
 # Prerequisites
 Node js should be installed in machine .
 brew install node.
+Install Redis.Start redis server.
+Install mongodb.Start mongod server.
 
 # Steps 
 
@@ -21,4 +45,12 @@ brew install node.
 
     ``$ node client``
     Enter valid user name password and friends name
+    
+    
+# Testing : 
+- Start client:
+  Test all the apis and functionality by running 2 clients.
+  
+
+    
 
