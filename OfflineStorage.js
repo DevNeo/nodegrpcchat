@@ -1,19 +1,13 @@
 //Implements functions to store data offline .
 var DB_NAME = "messagedb"
 var COLLECTION_NAME = "userchattable"
-
 var mongo = require('mongodb').MongoClient;
 var DB_NAME = "chatdb"
 var COLLECTION_NAME = "conversation"
 var COLLECTION_NAME_RECIEVER_FIELD = "receiver"
 var MESSAGE_COUNT_OFFLINE_STORAGE = 3;
-
 var url = 'mongodb://mongo/'+DB_NAME;
-//var url = "mongodb://localhost:27017/"+DB_NAME;
-
-
 var disableOfflineStorage = true;
-
 
 module.exports = {
 	storeMessage: function(senderId,recieverId,message,callback){
@@ -34,21 +28,17 @@ module.exports = {
         chat.find(query).sort(mysort).toArray(function(err, result){
           console.log(result);
           console.log("Size of receiver messages " + result.length);
-              if(result.length < MESSAGE_COUNT_OFFLINE_STORAGE)
-              {
+              if(result.length < MESSAGE_COUNT_OFFLINE_STORAGE){
                     console.log("Size is smaller than "+ MESSAGE_COUNT_OFFLINE_STORAGE + " Inserttingg..." );
                     chat.insertOne({reciever:recieverId,sender:senderId,msg:message},function(err,result){
-                    	if(err)
-                    	{
+                    	if(err){
+                    		db.close();
                     		throw err;
                     	}
-                    	else
-                    	{
-
+                    	else{
+                    		db.close();
                     	}
-                    	
-                    });  
-                                         
+                    });                        
               }
               else
               {
@@ -59,13 +49,16 @@ module.exports = {
                       var myquery = {"_id":result[0]._id};
                               //var newvalues = { $set: {msg:message} };
                               chat.deleteOne(myquery, function(err, obj) {
-
+                              	  if(err){
+                              	  	db.close();
+                              	  }	
+                              	  else{
                                   chat.insertOne({reciever:recieverId,sender:senderId,msg:message},function(err,result){
                                   	db.close();
-                                  }); 
-
+                                  });
+                              } 
+				
                               });
-
                 }
 
         });
@@ -82,8 +75,7 @@ module.exports = {
     	if(err){
       		console.log("Unable to connect mongo");
       		callback(new Error('failed'),null);	
-      		//throw  err;
-    	}
+     	}
     	else if (db){
     		console.log("Getting last n messages...");
     		var database = db.db(DB_NAME);
@@ -95,8 +87,6 @@ module.exports = {
         		console.log(result);
         		db.close();
         		callback(null,result);
-
-
         	});	
 		}
 	});
@@ -126,8 +116,7 @@ module.exports = {
     	if(err){
       		console.log("Unable to connect mongo");
       		callback(new Error('failed'),null);	
-      		//throw  err;
-    	}
+     	}
     	else if (db){
     		var database = db.db(DB_NAME);
        		let chat = database.collection(COLLECTION_NAME);

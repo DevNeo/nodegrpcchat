@@ -5,37 +5,29 @@ clientRedis.on("error", function (err) {
 });
 var async = require('async');
 
-// Store people in chatroom
-//var chatters = [];
-// Store messages in chatroom
-//var chat_messages = [];
-
-
 module.exports = {
+	//DOC : Init data stored in redis when the server starts.	
 	initDataFromStorage: function(callBackResult){
 	clientRedis.once('ready', function() {
 		async.parallel({
       		one: function(callback) {
 
      		 clientRedis.get('chat_users', function(err, reply) {
-      			if (reply) {
+ 					if(err)
+ 					{
+
+ 					}
+      			else if(reply) {
         			callback(null, reply);
-        			//chatters = JSON.parse(reply);
-        			//console.log("get chat users from redis data store");
-        			//console.log(chatters);
-      			}
+        			}
       		});
       	},
     		two: function(callback) {
         	clientRedis.get('chat_app_messages', function(err, reply) {
     		if (reply) {
         		callback(null, reply);
-       			// chat_messages = JSON.parse(reply);
-       			// console.log("get char messages from redis data store")
-       			// console.log(chat_messages);
-    		}
+     		}
     	});
-    	//    callback(null, 'xyz\n');
     	}
   	},  function(err, results) {
 
@@ -46,18 +38,17 @@ module.exports = {
 	});
 
 	},
+	//DOC : Store data in redis with given key. 
 	storeDataWithKey: function(key,data,callBackResult){
 		clientRedis.set(key, JSON.stringify(data));
  		callBackResult("","sucess");
 	},
+
+	//DOC : Get data from redis with given key.
 	getDataWithKey:function(key,callBackResult){
 		clientRedis.get(key, function(err, reply) {
       			if (reply) 	
         			callBackResult(null,reply);
-        			//chatters = JSON.parse(reply);
-        			//console.log("get chat users from redis data store");
-        			//console.log(chatters);
-      			});
+        			});
 	}
-
 }

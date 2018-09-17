@@ -1,3 +1,5 @@
+//User class.
+
 var Dequeue = require('dequeue')
 module.exports = {
 Person: function(name, pass){
