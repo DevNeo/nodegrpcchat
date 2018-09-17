@@ -1,0 +1,31 @@
+version: "3"
+services:
+  grpcserver:
+    container_name: grpc_sample_server
+    tty: true
+    env_file:      
+      - environments/vars.env
+    volumes:
+     - .:/usr/src/app
+    build:
+      context: .
+      dockerfile: environments/Dockerfile
+    ports:
+      - "5001:5001"
+    env_file:      
+      - environments/vars.env
+    links:
+      - mongo
+      - redis
+   
+
+  mongo:
+    container_name: mongo
+    image: mongo
+    ports:
+      - "27017:27017"
+
+  redis:
+    image: redis
+    ports:
+        - "6379:6379"

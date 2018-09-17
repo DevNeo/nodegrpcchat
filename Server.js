@@ -131,6 +131,12 @@ function notifyChat(senderId,recieverId,message) {
   chat_messages.push({"reciever": recieverId,"sender":senderId,"msg":message});
 
   inMemoryStorage.storeDataWithKey('chat_app_messages',chat_messages,function(err,result){
+    console.log("Data inserted in redis");
+  });
+
+  inMemoryStorage.getDataWithKey('chat_app_messages',function(err,result){
+
+    console.log(result);
 
   });
   /*inMemoryStorage.storeMessageData(chat_messages,function(err,result){

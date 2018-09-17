@@ -8,7 +8,8 @@ var COLLECTION_NAME = "conversation"
 var COLLECTION_NAME_RECIEVER_FIELD = "receiver"
 var MESSAGE_COUNT_OFFLINE_STORAGE = 3;
 
-var url = "mongodb://localhost:27017/"+DB_NAME;
+var url = 'mongodb://mongo/'+DB_NAME;
+//var url = "mongodb://localhost:27017/"+DB_NAME;
 
 
 var disableOfflineStorage = true;
@@ -16,7 +17,7 @@ var disableOfflineStorage = true;
 
 module.exports = {
 	storeMessage: function(senderId,recieverId,message,callback){
-		mongo.connect("mongodb://localhost:27017/"+DB_NAME,{ useNewUrlParser: true },function(err,db){
+		mongo.connect(url,{ useNewUrlParser: true },function(err,db){
     if(err){
       console.log("Unable to connect mongo");
       callback(new Error('failed'),null);	
@@ -77,7 +78,7 @@ module.exports = {
     });	
 	},
 	getLastNMessages:function(userId,callback){
-		mongo.connect("mongodb://localhost:27017/"+DB_NAME,{ useNewUrlParser: true },function(err,db){
+		mongo.connect(url,{ useNewUrlParser: true },function(err,db){
     	if(err){
       		console.log("Unable to connect mongo");
       		callback(new Error('failed'),null);	
@@ -101,7 +102,7 @@ module.exports = {
 	});
 	},	
 	deleteAllMessagesWithId:function(userId,callback){
-		mongo.connect("mongodb://localhost:27017/"+DB_NAME,{ useNewUrlParser: true },function(err,db){
+		mongo.connect(url,{ useNewUrlParser: true },function(err,db){
     	if(err){
       		console.log("Unable to connect mongo");
       		callback(new Error('failed'),null);	
@@ -121,7 +122,7 @@ module.exports = {
 	});
 	},
 	printAllMessagesWithId:function(userId,callback){
-		mongo.connect("mongodb://localhost:27017/"+DB_NAME,{ useNewUrlParser: true },function(err,db){
+		mongo.connect(url,{ useNewUrlParser: true },function(err,db){
     	if(err){
       		console.log("Unable to connect mongo");
       		callback(new Error('failed'),null);	

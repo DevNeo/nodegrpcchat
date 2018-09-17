@@ -1,5 +1,5 @@
 var redis = require("redis"),
-clientRedis = redis.createClient();
+clientRedis = redis.createClient(6379, 'redis');
 clientRedis.on("error", function (err) {
     console.log("Error " + err);
 });
